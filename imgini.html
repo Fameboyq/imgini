@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Конвертер картинок</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Martian+Mono:wght@300;400&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#f3efe7; --text:#1c1b19; --muted:#6a655c; --line:rgba(28,27,25,.25); --card:#fbf8f2;
+  --btn:#1c1b19; --on-btn:#f3efe7; --accent:#a8412b;
+  --serif:'Instrument Serif',Georgia,serif; --mono:'Martian Mono',ui-monospace,monospace;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --bg:#0c0e12; --text:#e9e6df; --muted:#8b877e; --line:rgba(233,230,223,.22); --card:#13161c;
+    --btn:#e9e6df; --on-btn:#0c0e12; --accent:#e08a5b;
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0c0e12; --text:#e9e6df; --muted:#8b877e; --line:rgba(233,230,223,.22); --card:#13161c;
+  --btn:#e9e6df; --on-btn:#0c0e12; --accent:#e08a5b;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--text);font-family:var(--mono);font-weight:300;font-size:13px;line-height:1.6}
+main{max-width:720px;margin:0 auto;padding:44px 22px 64px}
+h1{font-family:var(--serif);font-style:italic;font-weight:400;font-size:clamp(44px,10vw,74px);line-height:.95;margin:0 0 14px;letter-spacing:-.02em}
+.lead{color:var(--muted);margin:0 0 28px;max-width:52ch}
+.drop{display:block;border:2px dashed var(--line);border-radius:10px;background:var(--card);padding:38px 20px;text-align:center;cursor:pointer;transition:border-color .2s,background .2s}
+.drop:hover,.drop.over{border-color:var(--accent)}
+.drop b{display:block;font-family:var(--serif);font-style:italic;font-weight:400;font-size:clamp(26px,5vw,34px);margin-bottom:4px}
+.drop small{color:var(--muted);font-size:12px}
+.opts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:20px;margin:26px 0}
+.opts p{margin:0 0 8px;color:var(--muted);font-size:12px}
+.chips{display:flex;gap:8px}
+.chip{font:inherit;font-size:12px;color:var(--text);background:none;border:1px solid var(--line);border-radius:999px;padding:6px 16px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--btn);color:var(--on-btn);border-color:var(--btn)}
+input[type=range]{width:100%;accent-color:var(--accent)}
+input[type=range]:disabled{opacity:.35}
+input[type=number]{font:inherit;width:100%;color:var(--text);background:var(--card);border:1px solid var(--line);border-radius:8px;padding:7px 10px}
+:focus-visible{outline:2px solid var(--accent);outline-offset:3px}
+#status{min-height:20px;color:var(--accent);margin:0 0 10px}
+ul{list-style:none;margin:0;padding:0;display:grid;gap:10px}
+li{display:flex;align-items:center;gap:14px;background:var(--card);border:1px solid var(--line);border-radius:10px;padding:10px 12px}
+li img{width:56px;height:56px;object-fit:cover;border-radius:6px;flex:none;background:var(--line)}
+.meta{flex:1;min-width:0}
+.meta strong{display:block;font-weight:400;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.meta span{color:var(--muted);font-size:12px}
+.btn,li a{font:inherit;font-size:12px;color:var(--on-btn);background:var(--btn);border:0;border-radius:999px;padding:7px 16px;cursor:pointer;text-decoration:none;flex:none}
+.ghost{color:var(--text);background:none;border:1px solid var(--line)}
+.bar{display:flex;gap:10px;margin-top:16px}
+@media (prefers-reduced-motion:reduce){.drop{transition:none}}
+</style>
+</head>
+<body>
+<main>
+  <h1>конвертер картинок</h1>
+  <p class="lead">Перетащи картинки, выбери формат и размер, скачай. Файлы никуда не отправляются: всё считается прямо в твоём браузере.</p>
+
+  <label class="drop" id="drop">
+    <input type="file" id="file" accept="image/*" multiple hidden>
+    <b>перетащи картинки сюда</b>
+    <small>или нажми, чтобы выбрать. Можно вставить из буфера через Ctrl+V</small>
+  </label>
+
+  <section class="opts">
+    <div><p>во что превратить</p>
+      <div class="chips" id="fmts">
+        <button class="chip" type="button" data-f="webp" aria-pressed="true">webp</button>
+        <button class="chip" type="button" data-f="jpg" aria-pressed="false">jpg</button>
+        <button class="chip" type="button" data-f="png" aria-pressed="false">png</button>
+      </div></div>
+    <div><p>качество: <output id="qv">85</output></p><input type="range" id="q" min="40" max="100" value="85"></div>
+    <div><p>максимальная ширина, px</p><input type="number" id="mw" min="16" placeholder="как в оригинале"></div>
+  </section>
+
+  <p id="status" aria-live="polite"></p>
+  <ul id="list"></ul>
+  <div class="bar" id="bar" hidden>
+    <button class="btn" id="all" type="button">скачать всё</button>
+    <button class="btn ghost" id="clear" type="button">очистить</button>
+  </div>
+</main>
+
+<script>
+const $ = id => document.getElementById(id);
+const FM = {png: "image/png", jpg: "image/jpeg", webp: "image/webp"};
+let fmt = "webp", items = [], timer;
+
+const size = b => b < 1024 ? b + " Б" : b < 1048576 ? Math.round(b / 1024) + " КБ" : (b / 1048576).toFixed(1).replace(".", ",") + " МБ";
+const note = t => { $("status").textContent = t; };
+
+async function decode(file) {
+  try { return await createImageBitmap(file); }
+  catch (e) {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    await new Promise((ok, no) => { img.onload = ok; img.onerror = no; img.src = url; });
+    URL.revokeObjectURL(url);
+    return img;
+  }
+}
+
+function convert(it) {
+  const mw = parseInt($("mw").value) || 0, w0 = it.src.width, h0 = it.src.height;
+  const k = mw && w0 > mw ? mw / w0 : 1, w = Math.round(w0 * k), h = Math.round(h0 * k);
+  const c = document.createElement("canvas"); c.width = w; c.height = h;
+  const g = c.getContext("2d");
+  if (fmt === "jpg") { g.fillStyle = "#fff"; g.fillRect(0, 0, w, h); }
+  g.drawImage(it.src, 0, 0, w, h);
+  return new Promise(res => c.toBlob(b => {
+    if (it.url) URL.revokeObjectURL(it.url);
+    it.blob = b; it.w = w; it.h = h; it.ext = fmt;
+    it.url = b ? URL.createObjectURL(b) : "";
+    it.bad = !b || b.type !== FM[fmt];
+    res();
+  }, FM[fmt], fmt === "png" ? undefined : $("q").value / 100));
+}
+
+async function add(files) {
+  note("");
+  for (const f of files) {
+    if (!f.type.startsWith("image/")) { note("«" + f.name + "» не картинка, пропустил."); continue; }
+    try {
+      const it = {name: f.name.replace(/\.[^.]+$/, "") || "image", orig: f.size, src: await decode(f), url: ""};
+      await convert(it); items.push(it);
+    } catch (e) { note("Не получилось открыть «" + f.name + "»: этот браузер не знает такой формат."); }
+  }
+  render();
+}
+
+function render() {
+  const ul = $("list"); ul.textContent = "";
+  items.forEach(it => {
+    const li = document.createElement("li");
+    const img = document.createElement("img"); img.alt = ""; if (it.url) img.src = it.url;
+    const meta = document.createElement("div"); meta.className = "meta";
+    const s = document.createElement("strong"); s.textContent = it.name + "." + it.ext;
+    const sp = document.createElement("span");
+    if (it.bad) sp.textContent = "Этот браузер не умеет сохранять в " + it.ext + ", выбери другой формат.";
+    else {
+      const d = Math.round((1 - it.blob.size / it.orig) * 100);
+      sp.textContent = it.w + "×" + it.h + ", было " + size(it.orig) + ", стало " + size(it.blob.size) + (d > 0 ? " (на " + d + "% меньше)" : d < 0 ? " (на " + (-d) + "% больше)" : "");
+    }
+    meta.append(s, sp); li.append(img, meta);
+    if (!it.bad) { const a = document.createElement("a"); a.href = it.url; a.download = it.name + "." + it.ext; a.textContent = "скачать"; li.append(a); }
+    ul.append(li);
+  });
+  $("bar").hidden = !items.length;
+}
+
+function redo() { clearTimeout(timer); timer = setTimeout(async () => { await Promise.all(items.map(convert)); render(); }, 200); }
+
+$("fmts").addEventListener("click", e => {
+  const b = e.target.closest(".chip"); if (!b) return;
+  fmt = b.dataset.f;
+  document.querySelectorAll(".chip").forEach(c => c.setAttribute("aria-pressed", String(c === b)));
+  $("q").disabled = fmt === "png";
+  redo();
+});
+$("q").oninput = () => { $("qv").textContent = $("q").value; redo(); };
+$("mw").oninput = redo;
+$("file").onchange = e => { add([...e.target.files]); e.target.value = ""; };
+
+const drop = $("drop");
+["dragenter", "dragover"].forEach(n => drop.addEventListener(n, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(n => drop.addEventListener(n, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => add([...e.dataTransfer.files]));
+addEventListener("dragover", e => e.preventDefault());
+addEventListener("drop", e => { e.preventDefault(); if (!drop.contains(e.target)) add([...e.dataTransfer.files]); });
+addEventListener("paste", e => add([...e.clipboardData.files]));
+
+$("all").onclick = () => items.forEach((it, i) => setTimeout(() => {
+  if (it.bad) return;
+  const a = document.createElement("a"); a.href = it.url; a.download = it.name + "." + it.ext; a.click();
+}, i * 300));
+$("clear").onclick = () => { items.forEach(it => it.url && URL.revokeObjectURL(it.url)); items = []; note(""); render(); };
+</script>
+</body>
+</html>
